@@ -183,11 +183,9 @@ class LocalAIEngine(
                 // Graceful memory pressure fallback mid-session
                 val fallbackReply = generateRuleBasedReply(userPrompt)
                 return@withContext Pair(
-                    "$fallbackReply
-
-[Memory Notice: Switched to Rule Fallback because free RAM dropped to $availRamMb MB.]",
-                    "LOW-RAM FALLBACK"
-                )
+    "$fallbackReply\n[Memory Notice: Switched to Rule Fallback because free RAM dropped to $availRamMb MB.]",
+    "LOW-RAM FALLBACK"
+)
             }
             try {
                 val reply = nativeCompletion(nativeContextPtr, userPrompt, 128)
@@ -238,7 +236,7 @@ class LocalAIEngine(
         }
 
         // 4. Arithmetic Evaluator (e.g., "calculate 125 + 375", "what is 18 * 12")
-        val mathMatch = Regex("(-?\d+(?:\.\d+)?)\s*([\+\-\*\/xX])\s*(-?\d+(?:\.\d+)?)").find(lower)
+        val mathMatch = Regex("""(-?\d+(?:\.\d+)?)\s*([+\-*/xX])\s*(-?\d+(?:\.\d+)?)""").find(lower)
         if (mathMatch != null) {
             val a = mathMatch.groupValues[1].toDoubleOrNull()
             val op = mathMatch.groupValues[2]
@@ -274,7 +272,7 @@ class LocalAIEngine(
         }
 
         // 7. Informative Offline Fallback Response
-        return "I heard: "$trimmed". I am currently running in Offline Deterministic Rule Mode (${getAvailableRamMb()} MB free RAM). For device actions, try saying "Open Camera", "What time is it?", "Volume up", or "Note down <your text>". To enable open-ended generative AI chat offline, place a quantized `.gguf` model in ${getModelsDirectory().absolutePath}."
+        return "I heard: \"$trimmed\". I am currently running in Offline Deterministic Rule Mode (${getAvailableRamMb()} MB free RAM). For device actions, try saying \"Open Camera\", \"What time is it?\", \"Volume up\", or \"Note down <your text>\". To enable open-ended generative AI chat offline, place a quantized `.gguf` model in ${getModelsDirectory().absolutePath}."
     }
 
     fun release() {
