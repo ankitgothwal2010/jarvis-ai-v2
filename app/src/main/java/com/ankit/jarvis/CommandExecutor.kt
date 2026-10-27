@@ -13,12 +13,18 @@ import android.hardware.camera2.CameraManager
 import android.media.AudioManager
 import android.net.Uri
 import android.net.wifi.WifiManager
+import android.os.BatteryManager
 import android.os.Build
+import android.os.Environment
+import android.os.StatFs
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.provider.CallLog
 import android.provider.CalendarContract
+import android.provider.ContactsContract
+import android.provider.MediaStore
 import android.provider.Settings
+import android.provider.Telephony
 import android.telecom.TelecomManager
 import android.view.KeyEvent
 import java.text.SimpleDateFormat
@@ -94,6 +100,7 @@ class CommandExecutor(
         ) {
             return setFlashlight(true)
         }
+
         if (
             lower.contains("flashlight off") ||
             lower.contains("turn off flashlight") ||
@@ -117,6 +124,7 @@ class CommandExecutor(
         ) {
             return setWifiState(true)
         }
+
         if (
             lower.contains("turn wifi off") ||
             lower.contains("turn off wifi") ||
@@ -138,6 +146,7 @@ class CommandExecutor(
         ) {
             return setBluetoothState(true)
         }
+
         if (
             lower.contains("turn bluetooth off") ||
             lower.contains("turn off bluetooth") ||
@@ -155,15 +164,19 @@ class CommandExecutor(
                 message = "Opening Mobile Data & Internet controls."
             )
         }
+
         if (lower.contains("hotspot") || lower.contains("tethering")) {
             return openSystemSettings(Settings.ACTION_WIRELESS_SETTINGS, "Opening Hotspot & Tethering controls.")
         }
-        if (lower.contains("location on") || lower.contains("location off") || lower.contains("turn on location") || lower.contains("turn on gps") || lower.contains("gps kholo") || lower.contains("open gps")) {
+
+        if (lower.contains("location on") || lower.contains("location off") || lower.contains("turn on location") || lower.contains("turn on gps") || lower.contains("gps kholo") || lower.contains("location settings")) {
             return openSystemSettings(Settings.ACTION_LOCATION_SOURCE_SETTINGS, "Opening Location / GPS controls.")
         }
+
         if (lower.contains("airplane mode") || lower.contains("flight mode")) {
             return openSystemSettings(Settings.ACTION_AIRPLANE_MODE_SETTINGS, "Opening Airplane Mode settings.")
         }
+
         if (lower.contains("nfc")) {
             return openSystemSettings(Settings.ACTION_NFC_SETTINGS, "Opening NFC settings.")
         }
@@ -263,6 +276,7 @@ class CommandExecutor(
                 openAccessibilitySettingsPrompt("Enable 'JARVIS Full Phone Control Service' in Accessibility Settings to take screenshots by voice.")
             }
         }
+
         if (lower.contains("go to home screen") || lower == "go home" || lower == "home screen" || lower == "home chalo") {
             val svc = JarvisAccessibilityService.instance
             if (svc != null && svc.goHome()) {
@@ -275,6 +289,7 @@ class CommandExecutor(
             context.startActivity(homeIntent)
             return CommandResult(true, "Going to the home screen.", "SYSTEM NAV")
         }
+
         if (lower == "go back" || lower == "back" || lower == "peeche jao") {
             val svc = JarvisAccessibilityService.instance
             return if (svc != null && svc.goBack()) {
@@ -283,6 +298,7 @@ class CommandExecutor(
                 openAccessibilitySettingsPrompt("Enable 'JARVIS Full Phone Control Service' in Accessibility Settings for global Back navigation.")
             }
         }
+
         if (lower.contains("recent apps") || lower.contains("open recents")) {
             val svc = JarvisAccessibilityService.instance
             return if (svc != null && svc.openRecents()) {
@@ -291,6 +307,7 @@ class CommandExecutor(
                 openAccessibilitySettingsPrompt("Enable 'JARVIS Full Phone Control Service' in Accessibility Settings to open Recent Apps.")
             }
         }
+
         if (lower.contains("split screen")) {
             val svc = JarvisAccessibilityService.instance
             return if (svc != null && svc.toggleSplitScreen()) {
@@ -299,6 +316,7 @@ class CommandExecutor(
                 openAccessibilitySettingsPrompt("Enable 'JARVIS Full Phone Control Service' in Accessibility Settings to toggle Split Screen.")
             }
         }
+
         if (lower.contains("open notifications") || lower.contains("show notifications") || lower.contains("notification dikhao")) {
             val svc = JarvisAccessibilityService.instance
             return if (svc != null && svc.openNotifications()) {
@@ -307,6 +325,7 @@ class CommandExecutor(
                 openAccessibilitySettingsPrompt("Enable 'JARVIS Full Phone Control Service' in Accessibility Settings to expand notifications.")
             }
         }
+
         if (lower.contains("open quick settings") || lower.contains("quick settings")) {
             val svc = JarvisAccessibilityService.instance
             return if (svc != null && svc.openQuickSettings()) {
@@ -322,7 +341,7 @@ class CommandExecutor(
         if (lower.contains("record video") || lower.contains("record a video") || lower.contains("video camera") || lower.contains("video banao")) {
             return launchCameraMode(frontCamera = false, videoMode = true)
         }
-        if (lower.contains("open camera") || lower.contains("launch camera") || lower.contains("take a photo") || lower.contains("take a picture") || lower.contains("camera kholo") || lower.contains("camera open")) {
+        if (lower.contains("open camera") || lower.contains("launch camera") || lower.contains("take a photo") || lower.contains("take a picture") || lower.contains("camera kholo") || lower.contains("photo khicho")) {
             return launchCameraMode(frontCamera = false, videoMode = false)
         }
 
@@ -336,6 +355,7 @@ class CommandExecutor(
                 return CommandResult(true, "Media volume set to $pct% ($targetVol out of $max).", "AUDIO CTRL")
             }
         }
+
         if (lower.contains("volume up") || lower.contains("increase volume") || lower.contains("raise volume") || lower.contains("louder") || lower.contains("awaz badhao") || lower.contains("volume badhao")) {
             return adjustMediaVolume(AudioManager.ADJUST_RAISE, "Increasing media volume.")
         }
@@ -401,7 +421,7 @@ class CommandExecutor(
             }
         }
 
-        if (lower.contains("what time") || lower.contains("current time") || lower.contains("tell me the time") || lower == "time" || lower.contains("kya time") || lower.contains("samay kya") || lower.contains("samay batao")) {
+        if (lower.contains("what time") || lower.contains("current time") || lower.contains("tell me the time") || lower == "time" || lower.contains("kya time") || lower.contains("samay kya") || lower.contains("kitne baje")) {
             val sdf = SimpleDateFormat("hh:mm a", Locale.getDefault())
             return CommandResult(true, "The current time is ${sdf.format(Date())}.", "SYSTEM CLOCK")
         }
@@ -410,8 +430,8 @@ class CommandExecutor(
             return CommandResult(true, "Today is ${sdf.format(Date())}.", "SYSTEM CLOCK")
         }
         if (lower.contains("battery") || lower.contains("charge level") || lower.contains("battery kitni hai")) {
-            val bm = context.getSystemService(Context.BATTERY_SERVICE) as android.os.BatteryManager
-            val pct = bm.getIntProperty(android.os.BatteryManager.BATTERY_PROPERTY_CAPACITY)
+            val bm = context.getSystemService(Context.BATTERY_SERVICE) as BatteryManager
+            val pct = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
             return CommandResult(true, "Your device battery is currently at $pct percent.", "TELEMETRY")
         }
         if (lower.contains("storage") || lower.contains("disk space") || lower.contains("free space") || lower.contains("storage kitni hai")) {
@@ -431,6 +451,7 @@ class CommandExecutor(
                 }
             }
         }
+
         if (lower.contains("show my notes") || lower.contains("read my notes") || lower.contains("view notes") || lower == "my notes" || lower.contains("mere notes dikhao")) {
             val notes = memoryManager.getAllNotes()
             if (notes.isEmpty()) {
@@ -441,6 +462,7 @@ class CommandExecutor(
             }.joinToString("\n")
             return CommandResult(true, "Here are your recent local notes:\n$formatted", "LOCAL NOTES")
         }
+
         if (lower.contains("clear my notes") || lower.contains("delete all notes")) {
             memoryManager.clearAllNotes()
             return CommandResult(true, "All local notes have been permanently deleted.", "LOCAL NOTES")
@@ -476,6 +498,7 @@ class CommandExecutor(
                 return launchInstalledAppOrSite(targetApp)
             }
         }
+
         if (lower.endsWith(" kholo")) {
             val targetApp = input.substringBeforeLast(" kholo").trim()
             if (targetApp.isNotEmpty()) {
@@ -483,7 +506,7 @@ class CommandExecutor(
             }
         }
 
-        return CommandResult(handled = false, spokenResponse = "")
+        return CommandResult(false, "")
     }
 
     private fun vibratePulse() {
@@ -845,11 +868,11 @@ class CommandExecutor(
         return try {
             val messages = mutableListOf<String>()
             val cursor = context.contentResolver.query(
-                android.provider.Telephony.Sms.Inbox.CONTENT_URI,
-                arrayOf(android.provider.Telephony.Sms.ADDRESS, android.provider.Telephony.Sms.BODY, android.provider.Telephony.Sms.DATE),
+                Telephony.Sms.Inbox.CONTENT_URI,
+                arrayOf(Telephony.Sms.ADDRESS, Telephony.Sms.BODY, Telephony.Sms.DATE),
                 null,
                 null,
-                "${android.provider.Telephony.Sms.DATE} DESC"
+                "${Telephony.Sms.DATE} DESC"
             )
             cursor?.use {
                 var count = 0
@@ -998,10 +1021,35 @@ class CommandExecutor(
     }
 
     private fun getStorageReport(): CommandResult {
-        return CommandResult(true, "Storage status is available in the device telemetry panel.", "STORAGE")
+        return try {
+            val stat = StatFs(Environment.getExternalStorageDirectory().absolutePath)
+            val totalBytes = stat.blockCountLong * stat.blockSizeLong
+            val freeBytes = stat.availableBytes
+            val usedBytes = totalBytes - freeBytes
+            val totalGb = totalBytes / (1024.0 * 1024.0 * 1024.0)
+            val freeGb = freeBytes / (1024.0 * 1024.0 * 1024.0)
+            val usedGb = usedBytes / (1024.0 * 1024.0 * 1024.0)
+            CommandResult(true, "Storage: ${String.format(Locale.getDefault(), "%.2f", totalGb)} GB total, ${String.format(Locale.getDefault(), "%.2f", freeGb)} GB free, ${String.format(Locale.getDefault(), "%.2f", usedGb)} GB used.", "TELEMETRY")
+        } catch (e: Exception) {
+            CommandResult(true, "Unable to read storage: ${e.localizedMessage}", "ERROR")
+        }
     }
 
     private fun lookupContactNumberByName(name: String): String? {
-        return null
+        return try {
+            val uri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI
+            val projection = arrayOf(ContactsContract.CommonDataKinds.Phone.NUMBER)
+            val selection = "${ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} LIKE ?"
+            val selectionArgs = arrayOf("%$name%")
+            val cursor = context.contentResolver.query(uri, projection, selection, selectionArgs, null)
+            cursor?.use {
+                if (it.moveToFirst()) {
+                    return it.getString(0)
+                }
+            }
+            null
+        } catch (_: Exception) {
+            null
+        }
     }
 }
