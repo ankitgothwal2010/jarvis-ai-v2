@@ -8,6 +8,7 @@
  */
 package com.ankit.jarvis
 
+import android.provider.Telephony
 import android.app.NotificationManager
 import android.app.admin.DevicePolicyManager
 import android.bluetooth.BluetoothAdapter
@@ -463,33 +464,33 @@ class CommandExecutor(
             return handleAlarmCommand(lower)
         }
         if (lower.startsWith("create event") || lower.startsWith("add calendar") || lower.contains("calendar event")) {
-            val title = input.substringAfter("event").trim().ifEmpty { "JARVIS Reminder" }
-            val calIntent = Intent(Intent.ACTION_INSERT).apply {
-                data = CalendarContract.Events.CONTENT_URI
-                putExtra(CalendarContract.Events.TITLE, title)
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            context.startActivity(calIntent)
-            return CommandResult(true, "Opening Calendar to save event: "$title".", "CALENDAR")
-        }
+    val title = input.substringAfter("event").trim().ifEmpty { "JARVIS Reminder" }
+    val calIntent = Intent(Intent.ACTION_INSERT).apply {
+        data = CalendarContract.Events.CONTENT_URI
+        putExtra(CalendarContract.Events.TITLE, title)
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+    context.startActivity(calIntent)
+    return CommandResult(true, "Opening Calendar to save event: $title.", "CALENDAR")
+}
 
         // 20. Clipboard Control ("copy to clipboard <text>", "read clipboard")
-        if (lower.startsWith("copy to clipboard ") || lower.startsWith("copy text ")) {
-            val textToCopy = input.substringAfter("clipboard ").substringAfter("text ").trim()
-            val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-            cm.setPrimaryClip(ClipData.newPlainText("JARVIS Copy", textToCopy))
-            vibratePulse()
-            return CommandResult(true, "Copied to your clipboard: "$textToCopy"", "CLIPBOARD")
-        }
-        if (lower.contains("read clipboard") || lower.contains("what is in my clipboard")) {
-            val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-            val clipText = cm.primaryClip?.getItemAt(0)?.coerceToText(context)?.toString()?.trim()
-            return if (!clipText.isNullOrEmpty()) {
-                CommandResult(true, "Your clipboard contains: "$clipText"", "CLIPBOARD")
-            } else {
-                CommandResult(true, "Your clipboard is currently empty or inaccessible.", "CLIPBOARD")
-            }
-        }
+       if (lower.startsWith("copy to clipboard ") || lower.startsWith("copy text ")) {
+    val textToCopy = input.substringAfter("clipboard ").substringAfter("text ").trim()
+    val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    cm.setPrimaryClip(ClipData.newPlainText("JARVIS Copy", textToCopy))
+    vibratePulse()
+    return CommandResult(true, "Copied to your clipboard: $textToCopy", "CLIPBOARD")
+}
+if (lower.contains("read clipboard") || lower.contains("what is in my clipboard")) {
+    val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    val clipText = cm.primaryClip?.getItemAt(0)?.coerceToText(context)?.toString()?.trim()
+    return if (!clipText.isNullOrEmpty()) {
+        CommandResult(true, "Your clipboard contains: $clipText", "CLIPBOARD")
+    } else {
+        CommandResult(true, "Your clipboard is currently empty or inaccessible.", "CLIPBOARD")
+    }
+}
 
         // 21. Device Telemetry: Time, Date, Battery, Storage Space
         if (lower.contains("what time") || lower.contains("current time") || lower.contains("tell me the time") ||
@@ -515,36 +516,34 @@ class CommandExecutor(
 
         // 22. Local Notes
         val notePrefixes = listOf(
-            "create a note ", "take a note ", "save a note ", "add note ",
-            "note down ", "remember that ", "note likho "
-        )
-        for (prefix in notePrefixes) {
-            if (lower.startsWith(prefix)) {
-                val noteBody = input.substring(prefix.length).trim()
-                if (noteBody.isNotEmpty()) {
-                    val saved = memoryManager.addNote(noteBody)
-                    return CommandResult(true, "Saved to your local notes: "${saved.content}"", "LOCAL NOTES")
-                }
-            }
+    "create a note ", "take a note ", "save a note ", "add note ",
+    "note down ", "remember that ", "note likho "
+)
+for (prefix in notePrefixes) {
+    if (lower.startsWith(prefix)) {
+        val noteBody = input.substring(prefix.length).trim()
+        if (noteBody.isNotEmpty()) {
+            val saved = memoryManager.addNote(noteBody)
+            return CommandResult(true, "Saved to your local notes: ${saved.content}", "LOCAL NOTES")
         }
-        if (lower.contains("show my notes") || lower.contains("read my notes") || lower.contains("view notes") ||
-            lower == "my notes" || lower.contains("mere notes dikhao")
-        ) {
-            val notes = memoryManager.getAllNotes()
-            if (notes.isEmpty()) {
-                return CommandResult(true, "You do not have any saved local notes yet. Say 'Note down' followed by your message.", "LOCAL NOTES")
-            }
-            val formatted = notes.take(5).mapIndexed { index, note ->
-                "${index + 1}. ${note.content} (${note.formattedDate()})"
-            }.joinToString("
-")
-            return CommandResult(true, "Here are your recent local notes:
-$formatted", "LOCAL NOTES")
-        }
-        if (lower.contains("clear my notes") || lower.contains("delete all notes")) {
-            memoryManager.clearAllNotes()
-            return CommandResult(true, "All local notes have been permanently deleted.", "LOCAL NOTES")
-        }
+    }
+}
+if (lower.contains("show my notes") || lower.contains("read my notes") || lower.contains("view notes") ||
+    lower == "my notes" || lower.contains("mere notes dikhao")
+) {
+    val notes = memoryManager.getAllNotes()
+    if (notes.isEmpty()) {
+        return CommandResult(true, "You do not have any saved local notes yet. Say 'Note down' followed by your message.", "LOCAL NOTES")
+    }
+    val formatted = notes.take(5).mapIndexed { index, note ->
+        "${index + 1}. ${note.content} (${note.formattedDate()})"
+    }.joinToString("\n")
+    return CommandResult(true, "Here are your recent local notes:\n$formatted", "LOCAL NOTES")
+}
+if (lower.contains("clear my notes") || lower.contains("delete all notes")) {
+    memoryManager.clearAllNotes()
+    return CommandResult(true, "All local notes have been permanently deleted.", "LOCAL NOTES")
+}
 
         // 23. System Settings Screens
         if (lower.contains("wifi settings") || lower.contains("wi-fi settings") || lower.contains("open wifi")) {
@@ -931,13 +930,15 @@ $formatted", "LOCAL NOTES")
                     count++
                 }
             }
-            if (entries.isEmpty()) {
-                CommandResult(true, "Your recent call log is empty.", "CALL LOG")
-            } else {
-                CommandResult(true, "Here are your recent calls:
-${entries.joinToString("
-")}", "CALL LOG")
-            }
+           if (entries.isEmpty()) {
+    CommandResult(true, "Your recent call log is empty.", "CALL LOG")
+} else {
+    CommandResult(
+        true,
+        "Here are your recent calls:\n${entries.joinToString("\n")}",
+        "CALL LOG"
+    )
+}
         } catch (e: Exception) {
             CommandResult(true, "Unable to read call log: ${e.localizedMessage}", "ERROR")
         }
@@ -957,22 +958,23 @@ ${entries.joinToString("
                 "${Telephony.Sms.DATE} DESC"
             )
             cursor?.use {
-                var count = 0
-                while (it.moveToNext() && count < 3) {
-                    val sender = it.getString(0) ?: "Unknown"
-                    val body = it.getString(1)?.replace("
-", " ")?.take(90) ?: ""
-                    messages.add("${count + 1}. From $sender: "$body"")
-                    count++
-                }
-            }
-            if (messages.isEmpty()) {
-                CommandResult(true, "No SMS messages found in your inbox.", "SMS INBOX")
-            } else {
-                CommandResult(true, "Your latest SMS messages:
-${messages.joinToString("
-")}", "SMS INBOX")
-            }
+    var count = 0
+    while (it.moveToNext() && count < 3) {
+        val sender = it.getString(0) ?: "Unknown"
+        val body = it.getString(1)?.replace("\n", " ")?.take(90) ?: ""
+        messages.add("${count + 1}. From $sender: $body")
+        count++
+    }
+}
+if (messages.isEmpty()) {
+    CommandResult(true, "No SMS messages found in your inbox.", "SMS INBOX")
+} else {
+    CommandResult(
+        true,
+        "Your latest SMS messages:\n${messages.joinToString("\n")}",
+        "SMS INBOX"
+    )
+}
         } catch (e: Exception) {
             CommandResult(true, "Unable to read SMS inbox: ${e.localizedMessage}", "ERROR")
         }
@@ -987,13 +989,13 @@ ${messages.joinToString("
             lookupContactNumberByName(cleanedTarget)
         }
 
-        if (resolvedNumber.isNullOrBlank()) {
-            return CommandResult(
-                true,
-                "Could not find a phone number for "$cleanedTarget". Say 'Call +919876543210' or grant Contacts permission in Settings.",
-                "CALL"
-            )
-        }
+       if (resolvedNumber.isNullOrBlank()) {
+    return CommandResult(
+        true,
+        "Could not find a phone number for $cleanedTarget. Say 'Call +919876543210' or grant Contacts permission in Settings.",
+        "CALL"
+    )
+}
 
         return try {
             val hasCallPerm = PermissionManager.hasCallPermission(context)
