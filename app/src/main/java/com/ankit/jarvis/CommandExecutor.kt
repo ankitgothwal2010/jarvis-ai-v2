@@ -12,6 +12,7 @@ import android.content.Intent
 import android.hardware.camera2.CameraManager
 import android.media.AudioManager
 import android.net.Uri
+import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -157,7 +158,7 @@ class CommandExecutor(
         if (lower.contains("hotspot") || lower.contains("tethering")) {
             return openSystemSettings(Settings.ACTION_WIRELESS_SETTINGS, "Opening Hotspot & Tethering controls.")
         }
-        if (lower.contains("location on") || lower.contains("location off") || lower.contains("turn on location") || lower.contains("turn on gps") || lower.contains("gps kholo") || lower.contains("location settings")) {
+        if (lower.contains("location on") || lower.contains("location off") || lower.contains("turn on location") || lower.contains("turn on gps") || lower.contains("gps kholo") || lower.contains("open gps")) {
             return openSystemSettings(Settings.ACTION_LOCATION_SOURCE_SETTINGS, "Opening Location / GPS controls.")
         }
         if (lower.contains("airplane mode") || lower.contains("flight mode")) {
@@ -321,7 +322,7 @@ class CommandExecutor(
         if (lower.contains("record video") || lower.contains("record a video") || lower.contains("video camera") || lower.contains("video banao")) {
             return launchCameraMode(frontCamera = false, videoMode = true)
         }
-        if (lower.contains("open camera") || lower.contains("launch camera") || lower.contains("take a photo") || lower.contains("take a picture") || lower.contains("camera kholo") || lower.contains("photo khicho")) {
+        if (lower.contains("open camera") || lower.contains("launch camera") || lower.contains("take a photo") || lower.contains("take a picture") || lower.contains("camera kholo") || lower.contains("camera open")) {
             return launchCameraMode(frontCamera = false, videoMode = false)
         }
 
@@ -400,7 +401,7 @@ class CommandExecutor(
             }
         }
 
-        if (lower.contains("what time") || lower.contains("current time") || lower.contains("tell me the time") || lower == "time" || lower.contains("kya time") || lower.contains("samay kya") || lower.contains("kitne baje")) {
+        if (lower.contains("what time") || lower.contains("current time") || lower.contains("tell me the time") || lower == "time" || lower.contains("kya time") || lower.contains("samay kya") || lower.contains("samay batao")) {
             val sdf = SimpleDateFormat("hh:mm a", Locale.getDefault())
             return CommandResult(true, "The current time is ${sdf.format(Date())}.", "SYSTEM CLOCK")
         }
