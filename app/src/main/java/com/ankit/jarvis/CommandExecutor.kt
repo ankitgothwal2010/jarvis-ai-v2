@@ -36,7 +36,6 @@ import android.provider.CalendarContract
 import android.provider.ContactsContract
 import android.provider.MediaStore
 import android.provider.Settings
-import android. provider.Telephony
 import android.telecom.TelecomManager
 import android.telephony.SmsManager
 import android.view.KeyEvent
@@ -993,7 +992,7 @@ if (messages.isEmpty()) {
        if (resolvedNumber.isNullOrBlank()) {
     return CommandResult(
         true,
-        "Could not find a phone number for $cleanedTarget. Say 'Call +919876543210'..."
+        "Could not find a phone number for $cleanedTarget. Say 'Call +919876543210' or grant Contacts permission in Settings.",
         "CALL"
     )
 }
