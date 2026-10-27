@@ -471,7 +471,7 @@ class CommandExecutor(
         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
     context.startActivity(calIntent)
-    return CommandResult(true, "Opening Calendar to save event: $title.", "CALENDAR")
+   return CommandResult(true, "Opening Calendar to save event: $title.", "CALENDAR")
 }
 
         // 20. Clipboard Control ("copy to clipboard <text>", "read clipboard")
@@ -535,10 +535,11 @@ if (lower.contains("show my notes") || lower.contains("read my notes") || lower.
     if (notes.isEmpty()) {
         return CommandResult(true, "You do not have any saved local notes yet. Say 'Note down' followed by your message.", "LOCAL NOTES")
     }
-    val formatted = notes.take(5).mapIndexed { index, note ->
-        "${index + 1}. ${note.content} (${note.formattedDate()})"
-    }.joinToString("\n")
-    return CommandResult(true, "Here are your recent local notes:\n$formatted", "LOCAL NOTES")
+   val formatted = notes.take(5).mapIndexed { index, note ->
+    "${index + 1}. ${note.content} (${note.formattedDate()})"
+}.joinToString("\n")
+
+return CommandResult(true, "Here are your recent local notes:\n$formatted", "LOCAL NOTES")
 }
 if (lower.contains("clear my notes") || lower.contains("delete all notes")) {
     memoryManager.clearAllNotes()
@@ -957,7 +958,7 @@ if (lower.contains("clear my notes") || lower.contains("delete all notes")) {
                 null,
                 "${Telephony.Sms.DATE} DESC"
             )
-            cursor?.use {
+           cursor?.use {
     var count = 0
     while (it.moveToNext() && count < 3) {
         val sender = it.getString(0) ?: "Unknown"
@@ -992,7 +993,7 @@ if (messages.isEmpty()) {
        if (resolvedNumber.isNullOrBlank()) {
     return CommandResult(
         true,
-        "Could not find a phone number for $cleanedTarget. Say 'Call +919876543210' or grant Contacts permission in Settings.",
+        "Could not find a phone number for $cleanedTarget. Say 'Call +919876543210'..."
         "CALL"
     )
 }
