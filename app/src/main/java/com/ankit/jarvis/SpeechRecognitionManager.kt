@@ -203,9 +203,7 @@ class SpeechRecognitionManager(
         return if (detected != null) {
             "VOSK MODEL READY: ${detected.absolutePath}"
         } else {
-            "VOSK MODEL NOT FOUND YET. Place unzipped Vosk model folder inside:
-${getVoskModelsRootDir().absolutePath}
-(or inside /sdcard/JarvisModels/)"
+            "VOSK MODEL NOT FOUND YET. Place unzipped Vosk model folder inside:\n${getVoskModelsRootDir().absolutePath}\n(or inside /sdcard/JarvisModels/)"
         }
     }
 
@@ -362,8 +360,7 @@ ${getVoskModelsRootDir().absolutePath}
         if (!SpeechRecognizer.isRecognitionAvailable(context)) {
             val voskPath = getVoskModelsRootDir().absolutePath
             callback.onSpeechError(
-                "No system speech service found and no Vosk model found yet. Copy unzipped 'vosk-model-small-en-in' into:
-$voskPath"
+                "No system speech service found and no Vosk model found yet. Copy unzipped 'vosk-model-small-en-in' into:\n$voskPath"
             )
             return
         }
@@ -413,11 +410,9 @@ $voskPath"
                             "No speech detected. Speak clearly after tapping MIC: SPEAK."
                         SpeechRecognizer.ERROR_NETWORK,
                         SpeechRecognizer.ERROR_NETWORK_TIMEOUT ->
-                            "Android built-in speech needs offline voice pack or Vosk model. For 100% offline voice, place unzipped 'vosk-model-small-en-in' inside:
-$voskPath"
+                            "Android built-in speech needs offline voice pack or Vosk model. For 100% offline voice, place unzipped 'vosk-model-small-en-in' inside:\n$voskPath"
                         else ->
-                            "Speech error (code $error). For guaranteed offline voice recognition, extract 'vosk-model-small-en-in' into:
-$voskPath"
+                            "Speech error (code $error). For guaranteed offline voice recognition, extract 'vosk-model-small-en-in' into:\n$voskPath"
                     }
                     callback.onSpeechError(message)
                 }
